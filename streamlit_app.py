@@ -142,7 +142,7 @@ async def pdf_iter(file):
     st.balloons()
 
         
-async def rate_limited(array, folder, limit=5):
+async def rate_limited(array, folder, limit=2):
     to_return = []
     count = 0
     chunks = array[count:count + limit]
