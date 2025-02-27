@@ -25,6 +25,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 
+os.system("playwright install")
+
 try:
     load_dotenv()
     SCOPES = ['https://www.googleapis.com/auth/drive']
