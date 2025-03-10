@@ -73,7 +73,6 @@ async def close_browser():
 async def pdf_iter(file):
     global annotation_count
     st.write("Started Process...")
-    count = 0
     reader = PdfReader(file)
     writer = PdfWriter()
     annotations = []
@@ -81,8 +80,6 @@ async def pdf_iter(file):
         page = reader.pages[i]
         if "/Annots" in page:
             for a in page["/Annots"]:
-                if count >= 30:
-                    break
                 link = a["/A"]["/URI"]
                 rect = a["/Rect"]
                 annot = {
@@ -91,7 +88,6 @@ async def pdf_iter(file):
                     "page": i
                 }
                 annotations.append(annot)
-                count = count + 1
                 annotation_count = len(annotations)
             st.write(f"Found {annotation_count} annotations.")
             del page["/Annots"]
@@ -142,7 +138,7 @@ async def pdf_iter(file):
     st.balloons()
 
         
-async def rate_limited(array, folder, limit=2):
+async def rate_limited(array, folder, limit=5):
     to_return = []
     count = 0
     chunks = array[count:count + limit]
