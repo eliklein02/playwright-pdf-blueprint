@@ -50,8 +50,20 @@ except Exception as e:
     st.error("Error finding credentials file. Please contact the developer.")
 
 new_annots = []
-annotation_count = 0
-processed_annotations = 0
+if "finished_files" not in st.session_state:
+    st.session_state.finished_files = 0
+if "annotation_count" not in st.session_state:
+    st.session_state.annotation_count = 0
+if "processed_annotations" not in st.session_state:
+    st.session_state.processed_annotations = 0
+if "status_placeholder" not in st.session_state:
+    st.session_state.status_placeholder = st.empty()
+
+def update_progress(processed, total, placeholder):
+    st.session_state.processed_annotations = processed
+    st.session_state.annotation_count = total
+    placeholder.text(f"{st.session_state.processed_annotations}/{st.session_state.annotation_count} done.")
+
 browser = None
 context = None
 page = None
@@ -70,8 +82,14 @@ async def close_browser():
         browser = None
 
 
+if not "finished_files" in st.session_state:
+    st.session_state.finished_files = 0
+
 async def pdf_iter(file):
-    global annotation_count
+    # global annotation_count
+    # global processed_annotations
+    # global status_placeholder
+    processed_annotations = 0
     st.write("Started Process...")
     reader = PdfReader(file)
     writer = PdfWriter()
@@ -90,6 +108,8 @@ async def pdf_iter(file):
                 annotations.append(annot)
                 annotation_count = len(annotations)
             st.write(f"Found {annotation_count} annotations.")
+            st.session_state.annotation_count = len(annotations)
+            update_progress(st.session_state.processed_annotations, st.session_state.annotation_count, st.session_state.status_placeholder)
             del page["/Annots"]
             writer.add_page(page)
     today = datetime.today()
@@ -257,6 +277,9 @@ def get_image_from_storage(img_url, ref):
     return response._content
 
 def process_img_data(img_data, name, folder):
+        # global processed_annotations
+        # global status_placeholder
+        # global annotation_count
         html_content = f"""
         <html>
         <head>
@@ -285,6 +308,8 @@ def process_img_data(img_data, name, folder):
         name = f"{name}.html"
         file = io.BytesIO(html_content.encode('utf-8'))
         res = html_file_upload(file, name, folder)
+        st.session_state.processed_annotations += 1
+        update_progress(st.session_state.processed_annotations, st.session_state.annotation_count, st.session_state.status_placeholder)
 def create_folder(name, parent_id=None):
     folder_metadata = {
         "name": name,
