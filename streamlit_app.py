@@ -215,6 +215,8 @@ async def extract_googleapis_link(url):
             await page.wait_for_event("request", lambda request: urlparse(request.url).hostname == "storage.googleapis.com")
         except Exception as e:
             print(f"Error: {e} for url: {url}")
+        finally:
+            await page.close()
     payload = {
         "url": requests[-1],
         "name": requests[-1].split("/")[5].split(".")[0]
