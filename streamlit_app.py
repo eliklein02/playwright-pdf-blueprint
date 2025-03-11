@@ -164,10 +164,6 @@ async def rate_limited(array, folder, limit=3):
     chunks = array[count:count + limit]
     for i in range(0, len(array), limit):
         chunks = array[i:i + limit]
-    #     with concurrent.futures.ProcessPoolExecutor() as e:
-    #         new = await list(e.map(process_annotation_wrapper, [(a, folder) for a in chunks]))
-    #         to_return.extend(new)
-    # return to_return
         tasks = [process_annotation_wrapper((a, folder)) for a in chunks]
         print(f"Tasks: {tasks}")
         results = await asyncio.gather(*tasks)
@@ -311,9 +307,8 @@ def upload_file(file_path, mime_type, folder_id=None):
         media = MediaFileUpload(file_path, mimetype=mime_type)
         file = service.files().create(body = file_metadata, media_body = media, fields = "id", ).execute()
     except Exception as e:
-        st.write("Error:")
-        st.write(e)
-        st.write("Please try again.")
+        time.sleep(3)
+        file = service.files().create(body = file_metadata, media_body = media, fields = "id", ).execute()
         return
     return file
 
