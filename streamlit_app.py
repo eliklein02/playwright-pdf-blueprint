@@ -201,33 +201,6 @@ async def process_annotation(a, folder):
     process_img_data(image_data, name, folder)
     return [page, rect, name]
 
-# async def extract_googleapis_link(url):
-#     global browser, context
-#     await launch_browser()
-
-#     requests = []
-
-#     async def add_url(url):
-#         if urlparse(url.url).hostname == "storage.googleapis.com":
-#             requests.append(url.url)
-
-#     while len(requests) == 0:
-#         async with async_playwright() as p:
-#             h_name = "storage.googleapis.com"
-#             page = await context.new_page()
-#             await page.on("request", await add_url)
-#             await page.goto(url)
-#             await page.wait_for_event("request", lambda request: h_name == urlparse(request.url).hostname)
-
-
-#     payload = {
-#         "url": requests[-1],
-#         "name": requests[-1].split("/")[5].split(".")[0]
-#     }
-    
-#     return payload
-# ... (other imports and code)
-
 async def extract_googleapis_link(url):
     global browser, context
     if not browser or not context:
@@ -240,7 +213,7 @@ async def extract_googleapis_link(url):
 
     while len(requests) == 0:
         page = await context.new_page()
-        await page.goto(url)
+        await page.goto(url, timeout=60000)
         page.on("request", lambda request: add_url(request))
         try:
             await page.wait_for_event("request", lambda request: urlparse(request.url).hostname == "storage.googleapis.com")
