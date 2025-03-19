@@ -151,7 +151,7 @@ async def pdf_iter(file, folder_name, file_bytes):
 
         upload_file(f"./{file}", "application/pdf", folder_id=viewable_images_folder)
 
-        os.remove("./output.pdf")
+        os.remove(f"./{file}.pdf")
 
         st.info("Process Completed.")
         st.write("https://drive.google.com/drive/folders/1JtiUFBlXchgibYyMVTBLmWqSrvrapptg?usp=sharing")
