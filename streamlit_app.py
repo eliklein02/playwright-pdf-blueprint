@@ -85,13 +85,14 @@ async def close_browser():
 if not "finished_files" in st.session_state:
     st.session_state.finished_files = 0
 
-async def pdf_iter(file):
+async def pdf_iter(file, folder_name, file_bytes):
     # global annotation_count
     # global processed_annotations
     # global status_placeholder
     processed_annotations = 0
     st.write("Started Process...")
-    reader = PdfReader(file)
+    file_stream = io.BytesIO(file_bytes)
+    reader = PdfReader(file_stream)
     writer = PdfWriter()
     annotations = []
     for i in range(len(reader.pages)):
@@ -112,11 +113,11 @@ async def pdf_iter(file):
             update_progress(st.session_state.processed_annotations, st.session_state.annotation_count, st.session_state.status_placeholder)
             del page["/Annots"]
             writer.add_page(page)
-    today = datetime.today()
-    day_name = today.strftime('%A')
-    time = today.strftime('%I:%M %p')
-    c = day_name + "-" + str(today).split(" ")[0] + "-" + time
-    parent_folder = create_folder(c, "1JtiUFBlXchgibYyMVTBLmWqSrvrapptg")
+    # today = datetime.today()
+    # day_name = today.strftime('%A')
+    # time = today.strftime('%I:%M %p')
+    # c = day_name + "-" + str(today).split(" ")[0] + "-" + time
+    parent_folder = create_folder(folder_name, "1JtiUFBlXchgibYyMVTBLmWqSrvrapptg")
     viewable_images_folder = create_folder("360 Images", parent_id=parent_folder)
     required_assets_folder = create_folder("required_assets", parent_id=viewable_images_folder)
     current_dir = os.getcwd()
@@ -146,7 +147,7 @@ async def pdf_iter(file):
         writer.add_annotation(page_number=i[0], annotation=a)
     
 
-    with open("output.pdf", "wb") as output_pdf:
+    with open(file, "wb") as output_pdf:
         writer.write(output_pdf)
 
     upload_file("./output.pdf", "application/pdf", folder_id=viewable_images_folder)
@@ -324,11 +325,12 @@ def html_file_upload(file, name, folder):
     file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
     return file
 
-
 async def main():
     uploaded = st.file_uploader("Please upload a pdf")
-
-    if uploaded is not None:
+    folder_name = st.text_input("Folder Name")
+    st.write("Please ensure the folder name is unique to avoid overwriting existing files.")
+    st.write("Hit enter to apply folder name.")
+    if uploaded is not None and folder_name:
         button = st.button("Start")
         if button:
             random_number = random.randint(100, 1000000)
@@ -337,7 +339,7 @@ async def main():
             file_name = uploaded.name.split(".")[0]
             file_extension = uploaded.name.split(".")[1]
             try:
-                await pdf_iter(file_name + "." + file_extension)
+                await pdf_iter(file_name + "." + file_extension, folder_name, bytes_data)
             except Exception as e:
                 st.write("Error:")
                 st.write(e)
