@@ -59,10 +59,12 @@ async def launch_browser():
         context = await browser.new_context()
 
 async def close_browser():
+    global context
     global browser
+    if context:
+        await context.close()
     if browser:
         await browser.close()
-        browser = None
 
 async def pdf_iter(file, folder_name, file_bytes, limit):
     count = 0
