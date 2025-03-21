@@ -12,6 +12,8 @@ import os
 import io
 from dotenv import load_dotenv
 import asyncio
+import atexit
+import signal
 
 
 from playwright.async_api import async_playwright
@@ -81,7 +83,6 @@ async def close_browser():
         await browser.close()
         browser = None
 
-
 if not "finished_files" in st.session_state:
     st.session_state.finished_files = 0
 
@@ -90,8 +91,8 @@ async def pdf_iter(file, folder_name, file_bytes):
     # global processed_annotations
     # global status_placeholder
     processed_annotations = 0
-    file_stream = io.BytesIO(file_bytes)
     st.write("Started Process...")
+    file_stream = io.BytesIO(file_bytes)
     reader = PdfReader(file_stream)
     writer = PdfWriter()
     annotations = []
@@ -129,34 +130,34 @@ async def pdf_iter(file, folder_name, file_bytes):
         else:
             mime_type = "text/javascript"
         upload_file(f"./required_assets/{a}", mime_type, folder_id=required_assets_folder)
+    try:
+        new = await rate_limited(annotations, viewable_images_folder)
+        print(f"new: {new}")
+        for i in new:
+            print(new)
+            print(i)
+            page = reader.pages[i[0]]
+            rect = i[1]
+            name = i[2]
+            a = AnnotationBuilder.link(
+                rect=(rect[0], rect[1], rect[2], rect[3]),
+                url=name + ".html",
+            )
+            writer.add_annotation(page_number=i[0], annotation=a)
+        
 
-    new = await rate_limited(annotations, viewable_images_folder)
-    
-    await close_browser()
-    print(f"new: {new}")
-    for i in new:
-        print(new)
-        print(i)
-        page = reader.pages[i[0]]
-        rect = i[1]
-        name = i[2]
-        a = AnnotationBuilder.link(
-            rect=(rect[0], rect[1], rect[2], rect[3]),
-            url=name + ".html",
-        )
-        writer.add_annotation(page_number=i[0], annotation=a)
-    
+        with open(file, "wb") as output_pdf:
+            writer.write(output_pdf)
 
-    with open("output.pdf", "wb") as output_pdf:
-        writer.write(output_pdf)
+        upload_file(f"./{file}", "application/pdf", folder_id=viewable_images_folder)
 
-    upload_file("./output.pdf", "application/pdf", folder_id=viewable_images_folder)
+        os.remove(f"./{file}")
 
-    os.remove("./output.pdf")
-
-    st.info("Process Completed.")
-    st.write("https://drive.google.com/drive/folders/1JtiUFBlXchgibYyMVTBLmWqSrvrapptg?usp=sharing")
-    st.balloons()
+        st.info("Process Completed.")
+        st.write("https://drive.google.com/drive/folders/1JtiUFBlXchgibYyMVTBLmWqSrvrapptg?usp=sharing")
+        st.balloons()
+    finally:
+        await close_browser()
 
         
 async def rate_limited(array, folder, limit=10):
@@ -336,7 +337,6 @@ async def main():
             random_number = random.randint(100, 1000000)
             random_number = str(random_number)
             bytes_data = uploaded.getvalue()
-            print(f"Bytes data: {bytes_data}")
             file_name = uploaded.name.split(".")[0]
             file_extension = uploaded.name.split(".")[1]
             try:
