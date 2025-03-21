@@ -8,3 +8,4 @@ googleapis-common-protos
 python-dotenv
 urllib3
 playwright
+sendgrid
