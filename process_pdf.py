@@ -306,6 +306,17 @@ def html_file_upload(file, name, folder):
     file = service.files().create(body=file_metadata, media_body=media, fields="id").execute()
     return file
 
+def send_email(to, subject, content):
+    sg = sendgrid.SendGridAPIClient(api_key=(os.getenv("SENDGRID_API_KEY")))
+    from_email = Email("info@192dnsserver.com")
+    to_email = to
+    subject = subject
+    content = Content("text/plain", content)
+    mail = Mail(from_email, to_email, subject, content)
+    response = sg.client.mail.send.post(request_body=mail.get())
+    print(response.status_code)
+    sys.stdout.flush()
+
 async def main():
     print(sys.argv)
     sys.stdout.flush()
@@ -318,35 +329,10 @@ async def main():
     try:
         funct = await pdf_iter(file_name, folder_name, bytes_data, limit)
         sys.stdout.flush()
-        try:
-            sg = sendgrid.SendGridAPIClient(api_key=(os.getenv("SENDGRID_API_KEY")))
-            from_email = Email("info@192dnsserver.com")
-            to_email = "eliklein02@gmail.com"
-            subject = "Script Done"
-            content = Content("text/plain", f"Your script has finished running. \nHere is the link: https://drive.google.com/drive/folders/{funct}?usp=sharing")
-            mail = Mail(from_email, to_email, subject, content)
-            response = sg.client.mail.send.post(request_body=mail.get())
-            print(response.status_code)
-            sys.stdout.flush()
-        except Exception as e:
-            print("Error initializing SendGrid client.")
-            print(e)
-            sys.stdout.flush()
+        send_email("info@innerview-cpd.com", "Your script is done!", f"Your script has finished running. \nHere is the link: https://drive.google.com/drive/folders/{funct}?usp=sharing")
     except Exception as e:
-        try:
-            sg = sendgrid.SendGridAPIClient(api_key=(os.getenv("SENDGRID_API_KEY")))
-            from_email = Email("info@192dnsserver.com")
-            to_email = "eliklein02@gmail.com"
-            subject = "Error with pdf script"
-            content = Content("text/plain", f"There was an error: \n\n {e}")
-            mail = Mail(from_email, to_email, subject, content)
-            response = sg.client.mail.send.post(request_body=mail.get())
-            print(response.status_code)
-            sys.stdout.flush()
-        except Exception as e:
-            print("Error initializing SendGrid client.")
-            print(e)
-            sys.stdout.flush()
+        send_email("eliklein02@gmail.com", "Error while running script", f"An error occured. \n\n {e}")
+        send_email("info@innerview-cpd.com", "Error while running script", f"Please try again. The developer was notified and will look into this soon.")
         print(f"Error processing PDF: {e}")
         sys.stdout.flush()
     finally:
