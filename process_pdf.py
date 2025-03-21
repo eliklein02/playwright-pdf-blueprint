@@ -324,15 +324,27 @@ async def main():
     file_path_in_tmp = sys.argv[2]
     folder_name = sys.argv[3]
     limit = sys.argv[4]
+    if limit == "zero":
+        print("Its zero and not testing")
+        testing = False
+    else:
+        print("Not zero and testing")
+        testing = True
     with open(file_path_in_tmp, "rb") as f:
         bytes_data = f.read()
     try:
         funct = await pdf_iter(file_name, folder_name, bytes_data, limit)
         sys.stdout.flush()
-        send_email("info@innerview-cpd.com", "Your script is done!", f"Your script has finished running. \nHere is the link: https://drive.google.com/drive/folders/{funct}?usp=sharing")
+        if testing:
+            send_email("eliklein02@gmail.com", "Your script is done!", f"Your script has finished running. \nHere is the link: https://drive.google.com/drive/folders/{funct}?usp=sharing")
+        else:
+            send_email("info@innerview-cpd.com", "Your script is done!", f"Your script has finished running. \nHere is the link: https://drive.google.com/drive/folders/{funct}?usp=sharing")
     except Exception as e:
         send_email("eliklein02@gmail.com", "Error while running script", f"An error occured. \n\n {e}")
-        send_email("info@innerview-cpd.com", "Error while running script", f"Please try again. The developer was notified and will look into this soon.")
+        if testing:
+            send_email("eliklein02@gmail.com", "Error while running script", f"Please try again. The developer was notified and will look into this soon.")
+        else:
+            send_email("info@innerview-cpd.com", "Error while running script", f"Please try again. The developer was notified and will look into this soon.")
         print(f"Error processing PDF: {e}")
         sys.stdout.flush()
     finally:

@@ -28,4 +28,9 @@ if uploaded is not None and folder_name:
         with open(pdf_file_path, "wb") as f:
             f.write(bytes_data)
         run_external_script(pdf_file_name, pdf_file_path, folder_name, limit)
-        st.header("Started. You can now close the tab.")
+        st.markdown("## Started process.... You can now close this tab.")
+        if limit is not None:
+            st.markdown("### You'll get an email at eliklein02@gmail.com when it finishes.")
+        else:
+            st.markdown("### You'll get an email at info@innerview-cpd.com when it finishes.")
+
